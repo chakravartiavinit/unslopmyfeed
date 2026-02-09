@@ -24,8 +24,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const googleSigninBtn = document.getElementById('google-signin');
+    // Check if user explicitly clicked sign-in (persists across OAuth redirect)
+    let userInitiatedSignIn = sessionStorage.getItem('userInitiatedSignIn') === 'true';
 
-    console.log('Auth page loaded, Supabase initialized');
+    console.log('Auth page loaded, userInitiatedSignIn:', userInitiatedSignIn);
+
+    // If returning from OAuth, show loading overlay and hide login form
+    if (userInitiatedSignIn) {
+        document.querySelector('.auth-container').style.display = 'none';
+        const loadingEl = document.getElementById('auth-loading');
+        if (loadingEl) loadingEl.style.display = 'flex';
+    }
 
     // Check if already signed in
     checkAuthStatus();
@@ -33,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     googleSigninBtn.addEventListener('click', async () => {
         try {
             console.log('Google sign-in clicked');
+            sessionStorage.setItem('userInitiatedSignIn', 'true');
             googleSigninBtn.classList.add('loading');
             googleSigninBtn.textContent = 'Signing in...';
 
@@ -101,9 +111,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             chrome.runtime.sendMessage({ type: 'AUTH_SUCCESS', session });
 
-            // Give user feedback
-            alert('Successfully signed in! Redirecting...');
-            setTimeout(() => window.close(), 1000);
+            if (userInitiatedSignIn) {
+                // Clear the flag
+                sessionStorage.removeItem('userInitiatedSignIn');
+                // Redirect to success page
+                window.location.href = 'success.html';
+            } else {
+                setTimeout(() => window.close(), 1000);
+            }
         }
     });
 });

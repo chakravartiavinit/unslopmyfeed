@@ -167,16 +167,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const signOutBtn = document.getElementById('sign-out-btn');
     if (signOutBtn) {
         signOutBtn.addEventListener('click', async () => {
-            if (confirm('Are you sure you want to sign out? Your settings will remain saved in the cloud.')) {
-                await chrome.storage.local.remove(['isAuthenticated', 'supabaseSession']);
-                chrome.runtime.sendMessage({ type: 'SIGN_OUT' });
+            // Clear auth state
+            await chrome.storage.local.remove(['isAuthenticated', 'supabaseSession']);
+            chrome.runtime.sendMessage({ type: 'SIGN_OUT' });
 
-                // Redirect to auth page
-                chrome.tabs.create({
-                    url: chrome.runtime.getURL('src/auth/auth.html')
-                });
-                window.close();
-            }
+            // Redirect to sign-out confirmation page
+            chrome.tabs.create({
+                url: chrome.runtime.getURL('src/auth/signout.html')
+            });
+            window.close();
         });
     }
 });

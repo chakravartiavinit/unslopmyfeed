@@ -110,8 +110,10 @@ function cleanFeed() {
         }
     });
 
-    // Store the count
-    chrome.storage.local.set({ filteredCount });
+    // Store the count (only if extension context is still valid)
+    if (chrome.runtime?.id) {
+        chrome.storage.local.set({ filteredCount });
+    }
 }
 
 function triggerDusting() {
@@ -204,6 +206,7 @@ function applySlopAction(tweet, categories) {
 }
 
 function logForReview(text, categories) {
+    if (!chrome.runtime?.id) return;
     chrome.storage.local.get(['reviewQueue'], (result) => {
         const queue = result.reviewQueue || [];
         queue.push({
@@ -217,6 +220,11 @@ function logForReview(text, categories) {
 
 // Observe for new tweets
 const observer = new MutationObserver((mutations) => {
+    // Stop observing if extension context is invalidated
+    if (!chrome.runtime?.id) {
+        observer.disconnect();
+        return;
+    }
     let shouldClean = false;
     for (const mutation of mutations) {
         if (mutation.addedNodes.length > 0) {
