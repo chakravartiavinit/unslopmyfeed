@@ -1,0 +1,54 @@
+{
+  "manifest_version": 3,
+  "name": "unslopmyfeed",
+  "version": "1.0.0",
+  "description": "Filter out the slop from your X/Twitter feed.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "identity"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://twitter.com/*",
+        "https://x.com/*"
+      ],
+      "js": [
+        "src/content/content-script.js"
+      ],
+      "css": [
+        "src/content/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "host_permissions": [
+    "https://twitter.com/*",
+    "https://x.com/*",
+    "https://*.supabase.co/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/auth/*", "node_modules/@supabase/**"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

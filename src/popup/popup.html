@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>unslopmyfeed</title>
+    <link rel="stylesheet" href="popup.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <div class="container">
+        <header>
+            <div class="logo-area">
+                <span class="logo-text">unslop<span class="highlight">myfeed</span></span>
+            </div>
+            <button id="sign-out-btn" class="icon-btn" title="Sign out">👤</button>
+        </header>
+
+        <main>
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Posts Filtered</div>
+                    <div id="filtered-count" class="stat-value">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Feed Health</div>
+                    <div id="health-value" class="stat-value">Clean</div>
+                </div>
+            </section>
+
+            <section class="filter-controls">
+                <h3>Filter Categories</h3>
+                <div class="filter-grid">
+                    <div class="filter-item">
+                        <label class="switch">
+                            <input type="checkbox" id="filter-flex" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="filter-label">Flex / Bragging</span>
+                    </div>
+                    <div class="filter-item">
+                        <label class="switch">
+                            <input type="checkbox" id="filter-crypto" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="filter-label">Crypto Slop</span>
+                    </div>
+                    <div class="filter-item">
+                        <label class="switch">
+                            <input type="checkbox" id="filter-engagement" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="filter-label">Engagement Bait</span>
+                    </div>
+                    <div class="filter-item">
+                        <label class="switch">
+                            <input type="checkbox" id="filter-distractions" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="filter-label">Distracting Media (Thirst Traps)</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="review-area">
+                <div class="review-header">
+                    <h3>Review Queue</h3>
+                    <span id="review-count" class="badge">0</span>
+                </div>
+                <div id="review-list" class="review-list empty">
+                    <p class="empty-msg">No posts awaiting review.</p>
+                </div>
+                <button id="view-all-reviews" class="secondary-btn">View All Reviews</button>
+            </section>
+        </main>
+
+        <footer>
+            <button id="clean-now" class="action-btn primary">
+                <span>🧹</span>
+                Clean Feed Now
+            </button>
+            
+            <button id="view-filtered" class="action-btn secondary">
+                <span>👁️</span>
+                View Filtered Posts
+            </button>
+        </footer>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>

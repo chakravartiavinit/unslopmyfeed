@@ -1,0 +1,7 @@
+{
+  "name": "@supabase/supabase-js",
+  "version": "^2.39.0",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.95.3"
+  }
+}
