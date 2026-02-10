@@ -5,87 +5,167 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>unslopmyfeed</title>
     <link rel="stylesheet" href="popup.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="dark-theme">
+<body>
     <div class="container">
-        <header>
-            <div class="logo-area">
-                <span class="logo-text">unslop<span class="highlight">myfeed</span></span>
+        <!-- Background Elements for Mesh Gradient -->
+        <div class="bg-mesh">
+            <div class="mesh-blob blob-1"></div>
+            <div class="mesh-blob blob-2"></div>
+            <div class="mesh-blob blob-3"></div>
+        </div>
+
+        <!-- AUTH SCREEN -->
+        <div id="screen-auth" class="screen" style="display:none;">
+            <div class="auth-card glass">
+                <div class="logo-wrapper pulse-glow">
+                    <img src="../../icons/icon128.png" alt="Logo" class="main-logo">
+                </div>
+                <h1 class="gradient-text">unslopmyfeed</h1>
+                <p>Purify your X/Twitter feed with AI. Sync your intelligence across all devices.</p>
+                
+                <button id="google-sign-in" class="primary-btn ripple">
+                    <div class="btn-content">
+                        <img src="https://www.google.com/favicon.ico" alt="Google">
+                        <span>Continue with Google</span>
+                    </div>
+                </button>
+                
+                <div class="auth-footer">
+                    <span>Clean feed. Clear mind.</span>
+                </div>
             </div>
-            <button id="sign-out-btn" class="icon-btn" title="Sign out">Sign Out</button>
-        </header>
+        </div>
 
-        <main>
-            <section class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Posts Filtered</div>
-                    <div id="filtered-count" class="stat-value">0</div>
+        <!-- LOADING SCREEN -->
+        <div id="screen-loading" class="screen" style="display:none;">
+            <div class="loading-box">
+                <div class="spinner-wrapper">
+                    <div class="spinner"></div>
+                    <div class="logo-center-img">
+                        <img src="../../icons/icon48.png" alt="Logo">
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Feed Health</div>
-                    <div id="health-value" class="stat-value">Clean</div>
-                </div>
-            </section>
+                <p id="loading-status" class="loading-text">Calibrating filters...</p>
+            </div>
+        </div>
 
-            <section class="filter-controls">
-                <h3>Filter Categories</h3>
-                <div class="filter-grid">
-                    <div class="filter-item">
-                        <label class="switch">
+        <!-- SIGNED OUT SCREEN -->
+        <div id="screen-signedout" class="screen" style="display:none;">
+            <div class="auth-card glass">
+                <div class="success-icon bounce">
+                    <img src="../../icons/icon128.png" alt="Logo" style="width: 64px; height: 64px;">
+                </div>
+                <h1 class="gradient-text">See you later!</h1>
+                <p>You've been signed out. Your feed misses the purity.</p>
+                <button id="sign-in-again" class="secondary-btn ripple">Sign In Again</button>
+            </div>
+        </div>
+
+        <!-- DASHBOARD SCREEN -->
+        <div id="screen-dashboard" class="screen" style="display:none;">
+            <header class="glass-header">
+                <div class="brand">
+                    <img src="../../icons/icon48.png" alt="Logo" class="logo-mini-img">
+                    <h1 class="gradient-text-small">unslopmyfeed</h1>
+                </div>
+                <button id="profile-toggle" class="profile-trigger ripple">👤</button>
+            </header>
+
+            <!-- Profile Panel -->
+            <div id="profile-panel" class="profile-panel glass-panel" style="display:none;">
+                <div class="profile-header">
+                    <div id="user-avatar" class="profile-avatar glow-border">?</div>
+                    <div class="profile-user-info">
+                        <div id="user-name" class="user-fullname">User</div>
+                        <div id="user-email" class="user-email-text">user@example.com</div>
+                    </div>
+                </div>
+                
+                <div class="divider"></div>
+
+                <div class="profile-metrics">
+                    <div class="metric-card">
+                        <span class="metric-icon">🛡️</span>
+                        <div class="metric-content">
+                            <span class="metric-value" id="alltime-filtered">0</span>
+                            <span class="metric-label">Lifetime Blocked</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-icon">🔥</span>
+                        <div class="metric-content">
+                            <span class="metric-value" id="session-filtered">0</span>
+                            <span class="metric-label">Session Slop</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <button id="sign-out-btn" class="signout-btn ripple">
+                        <span>Sign Out</span>
+                        <span class="btn-icon">➡️</span>
+                    </button>
+                </div>
+            </div>
+
+            <main>
+                <div class="reload-banner">
+                    <span class="banner-icon">⚠️</span>
+                    <span>In case cleaning not working please reload</span>
+                </div>
+                <div class="hero-card glass-card">
+                    <div class="stats-grid">
+                        <div class="stat-main">
+                            <span class="label">Filtered Slop</span>
+                            <span id="filtered-count" class="value glow-text">0</span>
+                        </div>
+                        <div class="stat-sub">
+                            <span class="label">Feed State</span>
+                            <span id="health-value" class="value-text">Pure ✨</span>
+                        </div>
+                    </div>
+                    <button id="clean-btn" class="clean-btn-premium ripple">Clean Feed</button>
+                </div>
+
+                <div class="filters-container">
+                    <h2 class="section-title">Nuke Categories</h2>
+                    <div class="filter-list">
+                        <label class="filter-card">
                             <input type="checkbox" id="filter-flex" checked>
-                            <span class="slider"></span>
+                            <span class="filter-info">
+                                <span class="filter-icon">💪</span>
+                                <span class="filter-label">Status Flexing</span>
+                            </span>
                         </label>
-                        <span class="filter-label">Flex / Bragging</span>
-                    </div>
-                    <div class="filter-item">
-                        <label class="switch">
+                        <label class="filter-card">
                             <input type="checkbox" id="filter-crypto" checked>
-                            <span class="slider"></span>
+                            <span class="filter-info">
+                                <span class="filter-icon">🚀</span>
+                                <span class="filter-label">Crypto Shilling</span>
+                            </span>
                         </label>
-                        <span class="filter-label">Crypto Slop</span>
-                    </div>
-                    <div class="filter-item">
-                        <label class="switch">
+                        <label class="filter-card">
                             <input type="checkbox" id="filter-engagement" checked>
-                            <span class="slider"></span>
+                            <span class="filter-info">
+                                <span class="filter-icon">🎣</span>
+                                <span class="filter-label">Engagement Bait</span>
+                            </span>
                         </label>
-                        <span class="filter-label">Engagement Bait</span>
-                    </div>
-                    <div class="filter-item">
-                        <label class="switch">
+                        <label class="filter-card">
                             <input type="checkbox" id="filter-distractions" checked>
-                            <span class="slider"></span>
+                            <span class="filter-info">
+                                <span class="filter-icon">🔞</span>
+                                <span class="filter-label">Media Slop</span>
+                            </span>
                         </label>
-                        <span class="filter-label">Distracting Media (Thirst Traps)</span>
                     </div>
                 </div>
-            </section>
-
-            <section class="review-area">
-                <div class="review-header">
-                    <h3>Review Queue</h3>
-                    <span id="review-count" class="badge">0</span>
-                </div>
-                <div id="review-list" class="review-list empty">
-                    <p class="empty-msg">No posts awaiting review.</p>
-                </div>
-                <button id="view-all-reviews" class="secondary-btn">View All Reviews</button>
-            </section>
-        </main>
-
-        <footer>
-            <button id="clean-now" class="action-btn primary">
-                <span>🧹</span>
-                Clean Feed Now
-            </button>
-            
-            <button id="view-filtered" class="action-btn secondary">
-                <span>👁️</span>
-                View Filtered Posts
-            </button>
-        </footer>
+            </main>
+        </div>
     </div>
+    <script src="../auth/supabase-bundle.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>

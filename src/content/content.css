@@ -1,102 +1,139 @@
 /* Filtered tweet styles */
-.unslop-detected {
-    position: relative;
-    transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
+.unslop-detected.unslop-hidden {
+    min-height: 32px !important;
+    height: 32px !important;
+    margin: 4px 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: rgba(22, 27, 34, 0.4) !important;
+    border: 1px solid rgba(48, 54, 61, 0.5) !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    pointer-events: none !important;
 }
 
-.unslop-blurred {
-    filter: blur(8px) grayscale(50%);
-    opacity: 0.4;
+.unslop-hidden > * {
+    display: none !important;
+}
+
+.unslop-hidden::after {
+    content: "🚫 Filtered";
+    color: #484f58;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* Premium Dusting Animation */
+.unslop-dusting-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 100000;
+    overflow: hidden;
+    background: transparent;
+}
+
+.unslop-clean-line {
+    position: absolute;
+    top: 0;
+    left: -100px;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, #58a6ff, transparent);
+    box-shadow: 0 0 20px #58a6ff, 0 0 40px rgba(88, 166, 255, 0.4);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.unslop-sweeping .unslop-clean-line {
+    opacity: 1;
+    animation: unslop-sweep-move 1.2s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes unslop-sweep-move {
+    0% { left: -10px; opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { left: 110vw; opacity: 0; }
+}
+
+.unslop-dust-particle {
+    position: absolute;
+    font-size: 14px;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.unslop-sweeping .unslop-dust-particle {
+    animation: unslop-particle-float 1s ease-out forwards;
+}
+
+@keyframes unslop-particle-float {
+    0% {
+        transform: translate(0, 0) scale(0) rotate(0deg);
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+        transform: translate(10px, -10px) scale(1.2) rotate(45deg);
+    }
+    100% {
+        transform: translate(var(--p-tx), var(--p-ty)) scale(0) rotate(180deg);
+        opacity: 0;
+    }
+}
+
+.unslop-brush-tool {
+    position: absolute;
+    font-size: 48px;
+    top: 50%;
+    left: -100px;
+    margin-top: -24px;
+    filter: drop-shadow(0 0 10px rgba(88, 166, 255, 0.5));
+    pointer-events: none;
+    z-index: 100001;
+    opacity: 0;
+}
+
+.unslop-sweeping .unslop-brush-tool {
+    opacity: 1;
+    animation: unslop-brush-pass 1.2s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes unslop-brush-pass {
+    0% {
+        left: -60px;
+        transform: rotate(-30deg) scale(0.8);
+    }
+    50% {
+        transform: rotate(0deg) scale(1.1);
+    }
+    100% {
+        left: 110vw;
+        transform: rotate(30deg) scale(0.8);
+    }
+}
+
+.unslop-removing {
+    animation: unslop-fade-blur 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     pointer-events: none;
 }
 
-.unslop-overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 100;
-    pointer-events: auto;
-    transition: transform 0.2s;
-}
-
-.unslop-overlay:hover {
-    transform: translate(-50%, -50%) scale(1.05);
-}
-
-.unslop-label {
-    background: rgba(13, 17, 23, 0.95);
-    color: #58a6ff;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 700;
-    border: 1px solid #30363d;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.unslop-label:hover {
-    background: rgba(13, 17, 23, 1);
-    border-color: #58a6ff;
-    transform: scale(1.05);
-    box-shadow: 0 6px 16px rgba(88, 166, 255, 0.3);
-}
-
-/* Dusting Animation */
-/* Premium Cleaning Animation - Wallet-grade UX */
 @keyframes unslop-fade-blur {
     0% {
         opacity: 1;
         filter: blur(0px) brightness(1);
         transform: scale(1);
     }
-    50% {
-        opacity: 0.3;
-        filter: blur(8px) brightness(0.7);
-    }
     100% {
         opacity: 0;
         filter: blur(12px) brightness(0.5);
         transform: scale(0.95);
     }
-}
-
-@keyframes unslop-shimmer {
-    0% {
-        background-position: -200% center;
-    }
-    100% {
-        background-position: 200% center;
-    }
-}
-
-.unslop-cleaning-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(88, 166, 255, 0.03) 25%,
-        rgba(88, 166, 255, 0.08) 50%,
-        rgba(88, 166, 255, 0.03) 75%,
-        transparent 100%
-    );
-    background-size: 200% 100%;
-    animation: unslop-shimmer 1.5s ease-in-out;
-    pointer-events: none;
-    z-index: 9999;
-}
-
-.unslop-removing {
-    animation: unslop-fade-blur 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    pointer-events: none;
 }

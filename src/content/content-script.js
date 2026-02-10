@@ -1,6 +1,4 @@
-// Basic filter engine integration (since we're not using modules, we'll recreate the logic or inject it)
-// In a production app, we'd use a bundler or import/export if manifest v3 supports it cleanly across all browsers.
-// Here we'll just include the logic directly to ensure it works.
+// Content script for unslopmyfeed - filters slop from X/Twitter feed
 
 const SLOP_PATTERNS = {
     flex: [
@@ -41,12 +39,7 @@ function checkMedia(tweet, activeFilters) {
     const results = { isSlop: false, categories: [] };
     if (!activeFilters.distractions) return results;
 
-    // Detect video elements or thumbnails
     const hasVideo = tweet.querySelector('video') || tweet.querySelector('[data-testid="videoPlayer"]');
-    const images = Array.from(tweet.querySelectorAll('img[src*="media"]'));
-
-    // Heuristic: If it has a video and a "suspicious" keyword in tweet or is just highly visual
-    // For now, let's flag videos as "distractions" if the category is enabled
     if (hasVideo) {
         results.isSlop = true;
         results.categories.push('distractions');
@@ -74,24 +67,39 @@ chrome.storage.local.get(['filters'], (result) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'SETTINGS_CHANGED') {
         activeSettings = message.settings;
+        // Reset all detected tweets so they get re-evaluated
+        document.querySelectorAll('.unslop-detected').forEach(tweet => {
+            const bar = tweet.querySelector('.unslop-bar');
+            if (bar) {
+                // Restore hidden children
+                Array.from(tweet.children).forEach(child => {
+                    if (child !== bar && child.style.display === 'none') {
+                        child.style.display = child.getAttribute('data-unslop-display') || '';
+                        child.removeAttribute('data-unslop-display');
+                    }
+                });
+                bar.remove();
+            }
+            tweet.classList.remove('unslop-detected');
+        });
         cleanFeed();
     } else if (message.type === 'TRIGGER_CLEAN') {
         triggerDusting();
-    } else if (message.type === 'SHOW_FILTERED') {
-        showFilteredPosts();
     }
 });
 
 function cleanFeed() {
-    // X (Twitter) tweet selector
     const tweets = document.querySelectorAll('article[data-testid="tweet"]');
     let filteredCount = 0;
 
     tweets.forEach(tweet => {
-        // Extract text
-        const tweetTextEl = tweet.querySelector('div[data-testid="tweetText"]');
-        if (!tweetTextEl) return;
+        // Skip if already processed
+        if (tweet.classList.contains('unslop-detected')) {
+            filteredCount++;
+            return;
+        }
 
+        const tweetTextEl = tweet.querySelector('div[data-testid="tweetText"]');
         const text = tweetTextEl ? tweetTextEl.innerText : '';
         const textResult = checkContent(text, activeSettings);
         const mediaResult = checkMedia(tweet, activeSettings);
@@ -102,125 +110,108 @@ function cleanFeed() {
         if (isSlop) {
             applySlopAction(tweet, categories);
             filteredCount++;
-        } else {
-            // Restore if previously hidden
-            tweet.style.display = 'block';
-            tweet.style.filter = 'none';
-            tweet.style.opacity = '1';
         }
     });
 
-    // Store the count (only if extension context is still valid)
+    // Store session count (not cumulative — just current visible filtered)
     if (chrome.runtime?.id) {
-        chrome.storage.local.set({ filteredCount });
+        chrome.storage.local.get(['allTimeFiltered', 'lastFilteredCount'], (result) => {
+            const lastCount = result.lastFilteredCount || 0;
+            const newDetections = Math.max(0, filteredCount - lastCount);
+            const allTime = (result.allTimeFiltered || 0) + newDetections;
+            chrome.storage.local.set({
+                filteredCount,
+                lastFilteredCount: filteredCount,
+                allTimeFiltered: allTime
+            });
+        });
     }
 }
 
 function triggerDusting() {
-    // Create premium shimmer overlay
+    // Create the dusting overlay
     const overlay = document.createElement('div');
-    overlay.className = 'unslop-cleaning-overlay';
-    document.body.appendChild(overlay);
+    overlay.className = 'unslop-dusting-overlay';
 
-    // Identify posts to remove
-    const tweets = document.querySelectorAll('article[data-testid="tweet"]');
-    const postsToRemove = [];
+    const cleanLine = document.createElement('div');
+    cleanLine.className = 'unslop-clean-line';
 
-    tweets.forEach(tweet => {
-        const tweetTextEl = tweet.querySelector('div[data-testid="tweetText"]');
-        const text = tweetTextEl ? tweetTextEl.innerText : '';
-        const textResult = checkContent(text, activeSettings);
-        const mediaResult = checkMedia(tweet, activeSettings);
-        if (textResult.isSlop || mediaResult.isSlop) {
-            postsToRemove.push({ tweet, categories: [...new Set([...textResult.categories, ...mediaResult.categories])] });
-        }
-    });
+    const brush = document.createElement('div');
+    brush.className = 'unslop-brush-tool';
+    brush.innerText = '🧹';
 
-    // Stagger the removal animation for smooth effect
-    postsToRemove.forEach((item, index) => {
-        setTimeout(() => {
-            item.tweet.classList.add('unslop-removing');
-        }, index * 40); // 40ms stagger for smooth cascade
-    });
+    overlay.appendChild(cleanLine);
+    overlay.appendChild(brush);
 
-    // Apply the actual filtering after animations complete
-    setTimeout(() => {
-        overlay.remove();
-        cleanFeed();
-    }, 600 + (postsToRemove.length * 40));
-}
+    // Create some initial dust particles
+    for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.className = 'unslop-dust-particle';
+        p.innerText = ['✨', '☁️', '❄️'][Math.floor(Math.random() * 3)];
 
-function showFilteredPosts() {
-    const filteredPosts = document.querySelectorAll('.unslop-detected');
+        // Random position and destination for float animation
+        const startX = Math.random() * 100;
+        const startY = Math.random() * 100;
+        const tx = (Math.random() - 0.5) * 200;
+        const ty = -100 - Math.random() * 100;
 
-    if (filteredPosts.length === 0) {
-        alert('No filtered posts found!');
-        return;
+        p.style.left = `${startX}vw`;
+        p.style.top = `${startY}vh`;
+        p.style.setProperty('--p-tx', `${tx}px`);
+        p.style.setProperty('--p-ty', `${ty}px`);
+        p.style.animationDelay = `${Math.random() * 0.5}s`;
+
+        overlay.appendChild(p);
     }
 
-    // Scroll to first filtered post
-    filteredPosts[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.body.appendChild(overlay);
 
-    // Pulse effect on all filtered posts
-    filteredPosts.forEach((post, index) => {
-        setTimeout(() => {
-            post.style.outline = '3px solid #58a6ff';
-            post.style.outlineOffset = '4px';
-            setTimeout(() => {
-                post.style.outline = '';
-                post.style.outlineOffset = '';
-            }, 1500);
-        }, index * 100);
+    // Start the sweep animation
+    requestAnimationFrame(() => {
+        overlay.classList.add('unslop-sweeping');
     });
+
+    // Run the actual clean in sync with the sweep
+    setTimeout(() => {
+        // Reset all detected tweets so they get re-processed fresh
+        document.querySelectorAll('.unslop-detected').forEach(tweet => {
+            tweet.classList.remove('unslop-detected', 'unslop-hidden');
+            tweet.removeAttribute('data-unslop-categories');
+        });
+        cleanFeed();
+    }, 600); // Trigger cleanup when the line is roughly in the middle
+
+    // Cleanup the overlay
+    setTimeout(() => {
+        overlay.remove();
+    }, 1500);
 }
 
 function applySlopAction(tweet, categories) {
-    // Check if already processed
     if (tweet.classList.contains('unslop-detected')) return;
+    tweet.classList.add('unslop-detected', 'unslop-hidden');
 
-    tweet.classList.add('unslop-detected', 'unslop-blurred');
-
-    // Add a overlay to explain why it's blurred
-    const overlay = document.createElement('div');
-    overlay.className = 'unslop-overlay';
-    overlay.innerHTML = `
-        <div class="unslop-label">
-            <span>🚫 Filtered: ${categories.join(', ')}</span>
-            <span style="font-size: 10px; opacity: 0.7; margin-left: 8px;">Click to view</span>
-        </div>
-    `;
-
-    // Make it clickable to reveal
-    overlay.style.cursor = 'pointer';
-    overlay.onclick = (e) => {
-        e.stopPropagation();
-        tweet.classList.remove('unslop-blurred');
-        overlay.remove();
-    };
-
-    // Add to review queue automatically
-    const tweetText = tweet.innerText.substring(0, 200);
-    logForReview(tweetText, categories);
-
-    tweet.appendChild(overlay);
+    // Optional: Add a small unobtrusive indicator or just hide it completely
+    // For now, we follow the request to "just hide the tweet" but with a redesign
+    // Setting a data attribute for tracking categories if needed later
+    tweet.setAttribute('data-unslop-categories', categories.join(','));
 }
 
-function logForReview(text, categories) {
-    if (!chrome.runtime?.id) return;
-    chrome.storage.local.get(['reviewQueue'], (result) => {
-        const queue = result.reviewQueue || [];
-        queue.push({
-            text,
-            categories,
-            timestamp: Date.now()
-        });
-        chrome.storage.local.set({ reviewQueue: queue });
-    });
-}
+// Block click from navigating on any accidental clicks if any remnant of our UI exists
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.unslop-detected')) {
+        // If we want it completely non-interactive when hidden
+        if (e.target.closest('.unslop-hidden')) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+        }
+    }
+}, true);
 
-// Observe for new tweets
+// Debounced observer — avoids excessive re-runs
+let cleanTimeout = null;
 const observer = new MutationObserver((mutations) => {
-    // Stop observing if extension context is invalidated
     if (!chrome.runtime?.id) {
         observer.disconnect();
         return;
@@ -228,12 +219,19 @@ const observer = new MutationObserver((mutations) => {
     let shouldClean = false;
     for (const mutation of mutations) {
         if (mutation.addedNodes.length > 0) {
-            shouldClean = true;
-            break;
+            // Only trigger if an actual tweet article was added
+            for (const node of mutation.addedNodes) {
+                if (node.nodeType === 1 && (node.matches?.('article[data-testid="tweet"]') || node.querySelector?.('article[data-testid="tweet"]'))) {
+                    shouldClean = true;
+                    break;
+                }
+            }
         }
+        if (shouldClean) break;
     }
     if (shouldClean) {
-        cleanFeed();
+        clearTimeout(cleanTimeout);
+        cleanTimeout = setTimeout(() => cleanFeed(), 200);
     }
 });
 
