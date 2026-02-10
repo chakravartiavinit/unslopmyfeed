@@ -1,103 +1,88 @@
-# unslopmyfeed
+# unslopmyfeed 🧹🛡️
 
-A Chrome extension to filter distracting content from your X/Twitter feed.
+**unslopmyfeed** is a premium, AI-enhanced Chrome extension designed to purify your X/Twitter experience. It automatically identifies and eliminates "slop"—low-value content like humble-brags, crypto shilling, and engagement bait—leaving you with a focused, high-signal feed.
 
-## Features
+![unslopmyfeed UI State](https://img.shields.io/badge/Feed_State-Pure_✨-blueviolet?style=for-the-badge)
+![Chrome Extension V3](https://img.shields.io/badge/Version-Manifest_V3-blue?style=for-the-badge)
 
-- 🎯 **Smart Filtering**: Automatically detects and blurs flex posts, crypto shilling, engagement bait, and distracting media
-- 🧹 **Dusting Animation**: Premium cleaning animation when you activate filters
-- 👁️ **Click to Reveal**: Easily view filtered content with one click
-- ☁️ **Cloud Sync**: Sign in with Google to sync your settings across devices
-- 🔒 **Privacy First**: Your data is encrypted and never shared
+## 🎯 Features
 
-## Installation
+### 1. "Nuke" Categories
+Filter content with surgical precision using our pre-defined intelligence categories:
+- 💪 **Status Flexing**: Automatically blocks "humble brags," revenue screenshots, and hustle-culture monologues.
+- 🚀 **Crypto Shilling**: Nukes token launches, moon-shots, and unsolicited financial advice.
+- 🎣 **Engagement Bait**: Filters out "agree?" threads, retweet-for-PDFs, and "thoughts?" polls.
+- 🔞 **Media Slop**: Detects and blurs distracting or suggestive video content using visual heuristics.
+
+### 2. Premium Experience
+- ✨ **Dusting Animation**: A custom blue-particle sweep animation clears the slop from your screen in real-time.
+- 🌈 **High-End UI**: Built with a sleek dark theme featuring glassmorphism, mesh gradients, and smooth state transitions.
+- 📊 **Real-time Stats**: Track your browsing health with live "Filtered Slop" and "Lifetime Blocked" counters.
+
+### 3. Intelligence & Sync
+- ☁️ **Cloud Intelligence**: Sync your filters and block history across devices using **Supabase** and **Google OAuth**.
+- 🛡️ **Privacy-First**: Filtering happens locally on your machine. Analytics are anonymized and only used to improve detection accuracy.
+
+---
+
+## 🚀 Installation
 
 ### For Users
-
-1. Download the latest release from the Chrome Web Store (coming soon)
-2. Click "Add to Chrome"
-3. Sign in with Google (optional) to sync settings
-4. Visit X/Twitter and enjoy a cleaner feed!
+1. Download the extension from the [Chrome Web Store](https://chrome.google.com/webstore) (Soon).
+2. Click the 🧹 icon in your toolbar.
+3. Visit X/Twitter and watch the slop disappear.
 
 ### For Developers
-
-1. Clone this repository:
+1. **Clone the repo**:
    ```bash
    git clone https://github.com/yourusername/unslopmyfeed.git
    cd unslopmyfeed
    ```
-
-2. Install dependencies:
+2. **Setup Dependencies**:
    ```bash
    npm install
    ```
+3. **Supabase Config**:
+   - Create a project at [supabase.com](https://supabase.com).
+   - Update `src/popup/popup.js` with your `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
+4. **Load Extension**:
+   - Go to `chrome://extensions/`.
+   - Enable **Developer mode**.
+   - Click **Load unpacked** and select the project folder.
 
-3. Set up Supabase (for cloud sync features):
-   - Follow instructions in `SUPABASE_SETUP.md`
-   - Update `src/utils/supabase.js` with your credentials
+---
 
-4. Load the extension in Chrome:
-   - Open `chrome://extensions/`
-   - Enable "Developer mode"
-   - Click "Load unpacked"
-   - Select the `unslopmyfeed` directory
+## 🛠️ Tech Stack
 
-## Usage
+- **Core**: JavaScript (ES6+), HTML5, CSS3
+- **Styling**: Vanilla CSS (Custom Glassmorphism Design System)
+- **Backend/Auth**: Supabase (PostgreSQL, GoTrue)
+- **Manifest**: Chrome Extension API V3
 
-1. Click the extension icon to open the popup
-2. Toggle filters on/off for different content types:
-   - Flex posts (humble brags, showing off)
-   - Crypto shilling
-   - Engagement bait
-   - Distracting media (videos, thirst traps)
-3. Click "Clean Feed Now" to apply filters with animation
-4. Click "View Filtered Posts" to see what's being filtered
-5. Click on any blurred post to reveal it
+---
 
-## Tech Stack
-
-- **Frontend**: Vanilla JavaScript, CSS
-- **Backend**: Vercel Serverless Functions
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth with Google OAuth
-
-## Development
-
-### Project Structure
+## 📂 Project Structure
 
 ```
 unslopmyfeed/
+├── icons/              # Premium branded icons (PNG)
 ├── src/
-│   ├── auth/           # Authentication pages
-│   ├── content/        # Content scripts for X/Twitter
-│   ├── popup/          # Extension popup UI
-│   └── utils/          # Shared utilities (Supabase client)
-├── supabase/
-│   └── migrations/     # Database schema
-├── icons/              # Extension icons
-├── manifest.json       # Extension manifest
-└── background.js       # Background service worker
+│   ├── auth/           # Supabase Auth bundles & login logic
+│   ├── content/        # DOM observers and filtering engines
+│   ├── popup/          # The main dashboard UI & styling
+│   └── utils/          # Client initializers
+├── background.js       # Global state & session manager
+└── manifest.json       # extension permissions & routing
 ```
 
-### Contributing
+---
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+## 🛡️ License
+Distributed under the MIT License. See `LICENSE` for more information.
 
-## Privacy
+---
 
-- Filter settings are stored locally by default
-- Cloud sync is optional and requires Google sign-in
-- No tracking or analytics
-- Open source - audit the code yourself!
+## 🤝 Support
+In case the cleaning doesn't trigger, simply **reload the page** or click the "Clean Feed" button in the extension dashboard.
 
-## License
-
-MIT License - see LICENSE file for details
-
-## Support
-
-Found a bug? Have a feature request? [Open an issue](https://github.com/yourusername/unslopmyfeed/issues)
+[Report a Bug](https://github.com/yourusername/unslopmyfeed/issues) | [Request a Feature](https://github.com/yourusername/unslopmyfeed/issues)
