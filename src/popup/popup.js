@@ -145,12 +145,32 @@ async function setupDashboard(user, session) {
 
     // Filters and Stats setup
     const filters = ['flex', 'crypto', 'engagement', 'distractions'];
-    const { filters: savedFilters, filteredCount, allTimeFiltered } = await chrome.storage.local.get(['filters', 'filteredCount', 'allTimeFiltered']);
+    const {
+        filters: localFilters,
+        customRules: localRules,
+        filteredCount,
+        allTimeFiltered
+    } = await chrome.storage.local.get(['filters', 'customRules', 'filteredCount', 'allTimeFiltered']);
 
-    const currentFilters = savedFilters || { flex: true, crypto: true, engagement: true, distractions: true };
+    // Load from Supabase (Source of Truth) or fallback to local
+    const { data: cloudSettings } = await supabaseClient
+        .from('user_settings')
+        .select('filters, custom_patterns')
+        .eq('user_id', user.id)
+        .single();
+
+    const currentFilters = cloudSettings?.filters || localFilters || { flex: true, crypto: true, engagement: true, distractions: true };
+    const currentCustomRules = cloudSettings?.custom_patterns || localRules || [];
+
+    // Sync state to local and UI
+    await chrome.storage.local.set({ filters: currentFilters, customRules: currentCustomRules });
+
     document.getElementById('filtered-count').textContent = filteredCount || 0;
     document.getElementById('session-filtered').textContent = filteredCount || 0;
     document.getElementById('alltime-filtered').textContent = allTimeFiltered || 0;
+
+    const rulesList = document.getElementById('custom-rules-list');
+    renderCustomRules(currentCustomRules, rulesList, user.id);
 
     filters.forEach(id => {
         const el = document.getElementById(`filter-${id}`);
@@ -162,10 +182,56 @@ async function setupDashboard(user, session) {
                     newFilters[fid] = document.getElementById(`filter-${fid}`).checked;
                 });
                 await chrome.storage.local.set({ filters: newFilters });
-                notifyContentScript({ type: 'SETTINGS_CHANGED', settings: newFilters });
+                const { customRules } = await chrome.storage.local.get(['customRules']);
+                notifyContentScript({ type: 'SETTINGS_CHANGED', settings: newFilters, customRules: customRules || [] });
+
+                // Sync to Cloud
+                await supabaseClient
+                    .from('user_settings')
+                    .upsert({ user_id: user.id, filters: newFilters, custom_patterns: customRules }, { onConflict: 'user_id' });
             };
         }
     });
+
+    // Custom Rules Logic
+    const customInput = document.getElementById('custom-slop-input');
+    const addBtn = document.getElementById('add-custom-nuke');
+
+    addBtn.onclick = async () => {
+        const text = customInput.value.trim();
+        if (!text) return;
+
+        const { customRules: rules } = await chrome.storage.local.get(['customRules']);
+        const updatedRules = rules || [];
+
+        const newRule = {
+            id: Date.now().toString(),
+            prompt: text,
+            active: true,
+            keywords: text.toLowerCase().split(' ').filter(w => w.length > 3)
+        };
+
+        updatedRules.push(newRule);
+        await chrome.storage.local.set({ customRules: updatedRules });
+        customInput.value = '';
+        renderCustomRules(updatedRules, rulesList, user.id);
+
+        const { filters: currentF } = await chrome.storage.local.get(['filters']);
+        notifyContentScript({
+            type: 'SETTINGS_CHANGED',
+            settings: currentF || currentFilters,
+            customRules: updatedRules
+        });
+
+        // Sync to Cloud
+        await supabaseClient
+            .from('user_settings')
+            .upsert({ user_id: user.id, filters: currentF, custom_patterns: updatedRules }, { onConflict: 'user_id' });
+    };
+
+    customInput.onkeypress = (e) => {
+        if (e.key === 'Enter') addBtn.onclick();
+    };
 
     const cleanBtn = document.getElementById('clean-btn');
     cleanBtn.onclick = () => {
@@ -182,6 +248,39 @@ async function setupDashboard(user, session) {
         document.getElementById('session-filtered').textContent = fc || 0;
         document.getElementById('alltime-filtered').textContent = af || 0;
     }, 2000);
+}
+
+function renderCustomRules(rules, container, userId) {
+    container.innerHTML = '';
+    rules.forEach(rule => {
+        const item = document.createElement('div');
+        item.className = 'custom-rule-item';
+        item.innerHTML = `
+            <span class="rule-text">${rule.prompt}</span>
+            <button class="delete-rule" data-id="${rule.id}">✕</button>
+        `;
+
+        item.querySelector('.delete-rule').onclick = async () => {
+            const { customRules: rules } = await chrome.storage.local.get(['customRules']);
+            const filtered = (rules || []).filter(r => r.id !== rule.id);
+            await chrome.storage.local.set({ customRules: filtered });
+            renderCustomRules(filtered, container, userId);
+
+            const { filters } = await chrome.storage.local.get(['filters']);
+            notifyContentScript({
+                type: 'SETTINGS_CHANGED',
+                settings: filters,
+                customRules: filtered
+            });
+
+            // Sync to Cloud
+            await supabaseClient
+                .from('user_settings')
+                .upsert({ user_id: userId, filters: filters, custom_patterns: filtered }, { onConflict: 'user_id' });
+        };
+
+        container.appendChild(item);
+    });
 }
 
 async function handleSignOut() {

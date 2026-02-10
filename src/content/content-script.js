@@ -19,9 +19,11 @@ const SLOP_PATTERNS = {
     ]
 };
 
-function checkContent(text, activeFilters) {
+function checkContent(text, activeFilters, customRules) {
     const results = { isSlop: false, categories: [] };
     if (!text) return results;
+
+    // Standard Filters
     for (const [category, patterns] of Object.entries(SLOP_PATTERNS)) {
         if (!activeFilters[category]) continue;
         for (const pattern of patterns) {
@@ -32,6 +34,22 @@ function checkContent(text, activeFilters) {
             }
         }
     }
+
+    // Custom AI Rules
+    if (customRules && customRules.length > 0) {
+        const lowerText = text.toLowerCase();
+        customRules.forEach(rule => {
+            if (!rule.active || !rule.keywords) return;
+            for (const kw of rule.keywords) {
+                if (lowerText.includes(kw.toLowerCase())) {
+                    results.isSlop = true;
+                    results.categories.push(`custom:${rule.prompt.substring(0, 15)}...`);
+                    break;
+                }
+            }
+        });
+    }
+
     return results;
 }
 
@@ -54,11 +72,15 @@ let activeSettings = {
     engagement: true,
     distractions: true
 };
+let customRules = [];
 
 // Load settings initially
-chrome.storage.local.get(['filters'], (result) => {
+chrome.storage.local.get(['filters', 'customRules'], (result) => {
     if (result.filters) {
         activeSettings = result.filters;
+    }
+    if (result.customRules) {
+        customRules = result.customRules;
     }
     cleanFeed();
 });
@@ -67,6 +89,7 @@ chrome.storage.local.get(['filters'], (result) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'SETTINGS_CHANGED') {
         activeSettings = message.settings;
+        customRules = message.customRules || [];
         // Reset all detected tweets so they get re-evaluated
         document.querySelectorAll('.unslop-detected').forEach(tweet => {
             const bar = tweet.querySelector('.unslop-bar');
@@ -101,7 +124,7 @@ function cleanFeed() {
 
         const tweetTextEl = tweet.querySelector('div[data-testid="tweetText"]');
         const text = tweetTextEl ? tweetTextEl.innerText : '';
-        const textResult = checkContent(text, activeSettings);
+        const textResult = checkContent(text, activeSettings, customRules);
         const mediaResult = checkMedia(tweet, activeSettings);
 
         const categories = [...new Set([...textResult.categories, ...mediaResult.categories])];

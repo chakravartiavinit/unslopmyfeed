@@ -130,12 +130,30 @@
                 </div>
 
                 <div class="filters-container">
-                    <h2 class="section-title">Nuke Categories</h2>
+                    <!-- Custom AI Nukes (Shifted Up) -->
+                    <div class="custom-nukes-header">
+                        <h2 class="section-title">Custom AI Nukes</h2>
+                        <span class="beta-tag">AI</span>
+                    </div>
+                    
+                    <div class="custom-input-group">
+                        <input type="text" id="custom-slop-input" placeholder="Describe what else is slop..." class="glass-input">
+                        <button id="add-custom-nuke" class="icon-btn-add ripple">
+                            <span>+</span>
+                        </button>
+                    </div>
+
+                    <div id="custom-rules-list" class="custom-rules-list">
+                        <!-- Custom rules injected here -->
+                    </div>
+
+                    <!-- Standard Filters (Shifted Down) -->
+                    <h2 class="section-title standard-filters-title">Nuke Categories</h2>
                     <div class="filter-list">
                         <label class="filter-card">
                             <input type="checkbox" id="filter-flex" checked>
                             <span class="filter-info">
-                                <span class="filter-icon">💪</span>
+                                <span class="filter-icon">�</span>
                                 <span class="filter-label">Status Flexing</span>
                             </span>
                         </label>
